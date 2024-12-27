@@ -1,0 +1,4 @@
+import os
+
+
+MAX_PAGE_DETAILS_LENGTH = int(os.getenv("MAX_PAGE_DETAILS_LENGTH", 2048))

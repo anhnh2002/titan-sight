@@ -1,0 +1,18 @@
+version: '3.3'
+
+services:
+  searxng:
+    image: searxng/searxng:2024.12.22-26097f444
+    restart: unless-stopped
+    ports:
+      - "6666:8080"
+    volumes:
+      - ./searxng:/etc/searxng:rw
+    networks:
+      - net
+
+networks:
+  net:
+    external: true
+    name: nginx_default
+
