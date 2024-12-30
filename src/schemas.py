@@ -33,6 +33,7 @@ class SearchResult(BaseModel):
     url: str
     content: str
     details: Optional[str] = None
+    answer: Optional[str] = None
     
 
     def __str__(self):

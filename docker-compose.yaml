@@ -1,9 +1,23 @@
 version: '3.3'
 
 services:
+  apis:
+    image: search-engine-apis:0.1.0
+    container_name: search-engine-apis
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    networks:
+      - net
+    command: uvicorn app:app --host ${API_HOST} --port ${API_PORT} --workers ${NUM_WORKERS}
+
   searxng:
     image: searxng/searxng:2024.12.22-26097f444
-    restart: unless-stopped
+    container_name: search-engine-searxng
     ports:
       - "6666:8080"
     volumes:
@@ -12,12 +26,12 @@ services:
       - net
 
   redis:
-    image: redis:7.4.1
-    hostname: cup-recommendation-redis
-    container_name: cup-recommendation-redis
+    image: redis/redis-stack-server:7.2.0-v13
+    container_name: search-engine-redis
     ports:
-      - "${REDIS_PORT}:${REDIS_PORT}"
-    command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD} --port ${REDIS_PORT}
+      - "${REDIS_PORT}:6379"
+    environment:
+    - REDIS_ARGS=--save 60 1
     volumes: 
       - ${SOURCE_REDIS_VOLUME}:/data
     networks:
@@ -26,5 +40,5 @@ services:
 networks:
   net:
     external: true
-    name: nginx_default
+    name: ${NETWORK}
 

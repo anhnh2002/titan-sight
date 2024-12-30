@@ -12,7 +12,6 @@ class LLMClient:
         self,
         base_url: str,
         api_key: str,
-        max_model_len: int,
         model_name: str,
         base_model_name: str,
         hf_token: str,
@@ -22,7 +21,6 @@ class LLMClient:
             api_key=api_key,
         )
 
-        self.max_model_len = max_model_len
         self.model_name = model_name
 
         self.tokenizer = AutoTokenizer.from_pretrained(base_model_name, token=hf_token)
@@ -41,6 +39,7 @@ class LLMClient:
                 {"role": "user", "content": prompt},
             ],
             top_p=0.5,
+            max_tokens=512,
         )
 
         return completion.choices[0].message["content"]

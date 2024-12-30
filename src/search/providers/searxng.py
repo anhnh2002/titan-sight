@@ -16,12 +16,12 @@ class SearxngSearchProvider(SearchProvider):
 
         # Fetch details for each result
         if link_results:
-            link_results = await self.fetch_details(link_results)
+            link_results = await self.fetch_details_and_generate_consise_answer(query, link_results)
 
         return SearchResponse(query=query, results=link_results)
 
     async def get_link_results(
-        self, client: httpx.AsyncClient, query: str, num_results: int = 6
+        self, client: httpx.AsyncClient, query: str, num_results: int
     ) -> list[SearchResult]:
         response = await client.get(
             f"{self.host}/search",

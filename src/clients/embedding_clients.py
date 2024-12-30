@@ -19,7 +19,7 @@ class EmbeddingClient:
     async def get_embedding(self, text: str) -> List[float]:
         response = await self.client.embeddings.create(
             model=self.embedding_model_name,
-            inputs=text,
+            input=text,
         )
 
         return response.data[0].embedding
