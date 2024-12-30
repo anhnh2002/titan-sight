@@ -27,9 +27,11 @@ class LLMClient:
 
         self.tokenizer = AutoTokenizer.from_pretrained(base_model_name, token=hf_token)
 
+
     async def count_tokens(self, text: str) -> int:
         tokenized: List[int] = self.tokenizer.encode(text, add_special_tokens=False)
         return len(tokenized)
+
 
     async def complettion(self, prompt: str) -> str:
 
@@ -43,6 +45,7 @@ class LLMClient:
 
         return completion.choices[0].message["content"]
     
+
     async def summarize_page(self, query: str, search_result: SearchResult) -> str:
 
         title = search_result.title

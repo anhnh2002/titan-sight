@@ -11,6 +11,18 @@ services:
     networks:
       - net
 
+  redis:
+    image: redis:7.4.1
+    hostname: cup-recommendation-redis
+    container_name: cup-recommendation-redis
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+    command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD} --port ${REDIS_PORT}
+    volumes: 
+      - ${SOURCE_REDIS_VOLUME}:/data
+    networks:
+      - net
+
 networks:
   net:
     external: true

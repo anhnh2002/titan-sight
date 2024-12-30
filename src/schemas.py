@@ -1,15 +1,11 @@
-# Some of the code here is based on github.com/cohere-ai/cohere-toolkit/
+# Code here is based on github.com/rashadphz/farfalle
 
 import os
 from datetime import datetime
 from enum import Enum
 from typing import List, Union, Optional
 
-from dotenv import load_dotenv
-
 from pydantic import BaseModel, Field
-
-load_dotenv()
 
 
 
@@ -26,8 +22,6 @@ def strtobool(val: str | bool) -> bool:
     if isinstance(val, bool):
         return val
     return val.lower() in ("true", "1", "t")
-
-LOCAL_MODELS_ENABLED = strtobool(os.getenv("ENABLE_LOCAL_MODELS", False))
 
 
 class RelatedQueries(BaseModel):
@@ -46,6 +40,7 @@ class SearchResult(BaseModel):
 
 
 class SearchResponse(BaseModel):
+    query: str
     results: List[SearchResult] = Field(default_factory=list)
     images: Optional[List[str]] = Field(default_factory=list)
 
