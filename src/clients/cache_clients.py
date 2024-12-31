@@ -39,21 +39,21 @@ class ShortTermCacheClient:
         expire_time: int,
         sim_threshold: float,
         embedding_client: EmbeddingClient,
+        embedding_dim: int,
     ):
         self.client = redis.Redis.from_url(redis_url, decode_responses=True)
 
         self.expire_time = expire_time
         self.sim_threshold = sim_threshold
 
+        self.embedding_client = embedding_client
+        self.embedding_dim = embedding_dim
+
         self.index_name: str="idx:search_vss"
         self._create_index()
 
-        self.embedding_client = embedding_client
-
 
     def _create_index(self):
-
-        embedding_dim = len(self.embedding_client.get_embedding("test"))
 
         schema = (
             VectorField(
@@ -61,7 +61,7 @@ class ShortTermCacheClient:
                 "FLAT",
                 {
                     "TYPE": "FLOAT32",
-                    "DIM": embedding_dim,
+                    "DIM": self.embedding_dim,
                     "DISTANCE_METRIC": "COSINE",
                 },
                 as_name="vector",
@@ -87,14 +87,14 @@ class ShortTermCacheClient:
         obj = obj.model_dump()
 
         # get the embedding for the object
-        obj["query_embedding"] = self.embedding_client.get_embedding(obj["query"])
+        obj["query_embedding"] = await self.embedding_client.get_embedding(obj["query"])
 
         # generate a unique key for the object, format "seach:<id>"
         id = str(hash(str(obj)))
         key = f"search:{id}"
 
-        # set the object in the cache
-        set_ojb = self.client.json().set(key, "$", obj)
+        # set the object in the cache if it doesn't already exist
+        set_ojb = self.client.json().set(key, "$", obj, nx=True)
 
         # set the expiration time
         set_ex = self.client.expire(key, self.expire_time)
@@ -104,7 +104,7 @@ class ShortTermCacheClient:
     async def get(self, query: str) -> SearchResponse:
         
         # get the embedding for the query
-        query_embedding = self.embedding_client.get_embedding(query)
+        query_embedding = await self.embedding_client.get_embedding(query)
 
 
         # create a query to search for similar embeddings
@@ -121,7 +121,7 @@ class ShortTermCacheClient:
             {
                 "query_vector": np.array(query_embedding, dtype=np.float32).tobytes()
             }
-        )
+        ).docs
 
         if not docs:
             return None
@@ -130,14 +130,14 @@ class ShortTermCacheClient:
         doc = docs[0]
 
         # return null if the similarity score is below the threshold
-        if doc.vector_score < self.sim_threshold:
+        if (1 - float(doc.vector_score)) < self.sim_threshold:
             return None
 
         # get the object from the cache
         obj = self.client.json().get(doc.id)
 
         # log the query which was found
-        logger.info(f"Found similar query: {obj}")
+        logger.info(f"Found similar query: {query}")
 
         return SearchResponse(**obj)
 
@@ -184,11 +184,15 @@ class LongTermCacheClient:
 
     async def set(self, search_response: SearchResponse):
 
-        # validate the object
-        urls_details = [{"url": result.url, "details": result.details} for result in search_response.results]
+        for result in search_response.results:
 
-        # insert the object in the collection
-        return self.collection.insert_many(urls_details)
+            if result.details:
+                self.collection.update_one(
+                    {"url": result.url},
+                    {"$set": {"url": result.url, "details": result.details}},
+                    upsert=True
+                )
+        
 
 
     async def get(self, url: str) -> str:

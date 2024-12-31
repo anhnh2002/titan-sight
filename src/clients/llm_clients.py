@@ -5,7 +5,7 @@ from typing import List
 from schemas import SearchResult
 
 from prompt_template import CONCISE_ANSWER_PROMPT
-from constants import MAX_PAGE_DETAILS_LENGTH
+from constants import MAX_PAGE_DETAILS_LENGTH, MAX_ANSWER_TOKEN_PER_PAGE
 
 class LLMClient:
     def __init__(
@@ -39,10 +39,10 @@ class LLMClient:
                 {"role": "user", "content": prompt},
             ],
             top_p=0.5,
-            max_tokens=512,
+            max_tokens=MAX_ANSWER_TOKEN_PER_PAGE,
         )
 
-        return completion.choices[0].message["content"]
+        return completion.choices[0].message.content.strip()
     
 
     async def summarize_page(self, query: str, search_result: SearchResult) -> str:

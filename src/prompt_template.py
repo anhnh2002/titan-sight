@@ -8,5 +8,5 @@ Given page:
 {details}
 \"\"\"
 
-Generate a concise answer to the query: \"{query}\"
+Generate a concise answer to the query: \"{query}\" in language which used in the query.
 """

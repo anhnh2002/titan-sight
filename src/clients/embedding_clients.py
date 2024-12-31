@@ -23,3 +23,4 @@ class EmbeddingClient:
         )
 
         return response.data[0].embedding
+    

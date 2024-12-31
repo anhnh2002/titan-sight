@@ -11,6 +11,9 @@ services:
       - .env
     ports:
       - "${API_PORT}:${API_PORT}"
+    volumes:
+      - ./src:/app
+      - ${HF_CACHE_DIR}:/root/.cache/huggingface
     networks:
       - net
     command: uvicorn app:app --host ${API_HOST} --port ${API_PORT} --workers ${NUM_WORKERS}
@@ -19,7 +22,7 @@ services:
     image: searxng/searxng:2024.12.22-26097f444
     container_name: search-engine-searxng
     ports:
-      - "6666:8080"
+      - "${SEARXNG_PORT}:8080"
     volumes:
       - ./searxng:/etc/searxng:rw
     networks:
@@ -40,5 +43,5 @@ services:
 networks:
   net:
     external: true
-    name: ${NETWORK}
+    name: nginx_default
 

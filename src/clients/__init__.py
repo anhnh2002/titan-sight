@@ -6,6 +6,7 @@ from constants import (
     REDIS_URL,
     EXPIRE_TIME,
     SIM_THRESHOLD,
+    EMBEDDING_DIM,
 
     MONGO_URL,
     MONGO_DB_NAME,
@@ -41,7 +42,9 @@ short_term_cache_client = ShortTermCacheClient(
     expire_time=EXPIRE_TIME,
     sim_threshold=SIM_THRESHOLD,
     embedding_client=embedding_client,
+    embedding_dim=EMBEDDING_DIM
 )
+
 
 long_term_cache_client = LongTermCacheClient(
     mongo_url=MONGO_URL,

@@ -43,11 +43,11 @@ class SearchProvider(ABC):
                 else:
                     # Fetch the URL in an executor
                     html = await asyncio.get_event_loop().run_in_executor(
-                        None, fetch_url, result.url
+                        None, lambda: fetch_url(result.url)
                     )
                     # Extract details in an executor
                     details = await asyncio.get_event_loop().run_in_executor(
-                        None, extract, html
+                        None, lambda: extract(html)
                     )
                     result.details = details
                 
