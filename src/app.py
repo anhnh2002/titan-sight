@@ -38,8 +38,8 @@ def ping(req: Request):
     return {"status": "Healthy"}
 
 # Version 1
-@app.get("/v1/search", description=f"Available search providers: {list(PROVIDERS.keys()) + ["auto"]}")
-async def search_v1(query: str, provider: Literal["searxng", "google", "duckduckgo", "auto"] = "auto", max_num_result: int = 3, enable_cache: bool = True):
+@app.get("/v1/search", description=f"Available search providers: {list(PROVIDERS.keys())}")
+async def search_v1(query: str, provider: Literal["searxng", "google", "duckduckgo"] = "duckduckgo", max_num_result: int = 3, enable_cache: bool = True):
     
     start_time = time.time()
 
