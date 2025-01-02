@@ -1,7 +1,8 @@
 from openai import AsyncOpenAI
 from transformers import AutoTokenizer
+import tiktoken
 
-from typing import List
+from typing import List, Optional
 from schemas import SearchResult
 
 from prompt_template import CONCISE_ANSWER_PROMPT
@@ -14,7 +15,7 @@ class LLMClient:
         api_key: str,
         model_name: str,
         base_model_name: str,
-        hf_token: str,
+        hf_token: Optional[str]=None,
     ):
         self.client = AsyncOpenAI(
             base_url=base_url,
@@ -23,11 +24,16 @@ class LLMClient:
 
         self.model_name = model_name
 
-        self.tokenizer = AutoTokenizer.from_pretrained(base_model_name, token=hf_token)
+        try:
+            # Use the tokenizer from tiktoken if available
+            self.tokenizer = tiktoken.encoding_for_model(base_model_name)
+        except:
+            # Use the Hugging Face tokenizer
+            self.tokenizer = AutoTokenizer.from_pretrained(base_model_name, token=hf_token)
 
 
     async def count_tokens(self, text: str) -> int:
-        tokenized: List[int] = self.tokenizer.encode(text, add_special_tokens=False)
+        tokenized: List[int] = self.tokenizer.encode(text)
         return len(tokenized)
 
 

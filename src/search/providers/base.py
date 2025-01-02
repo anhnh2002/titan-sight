@@ -4,6 +4,7 @@ from schemas import SearchResponse, SearchResult
 from typing import List
 
 from trafilatura import fetch_url, extract
+from constants import tralifatura_config
 import asyncio
 
 from clients import short_term_cache_client, long_term_cache_client, llm_client
@@ -16,6 +17,10 @@ class SearchProvider(ABC):
     @abstractmethod
     async def search(self, query: str, max_num_result: int) -> SearchResponse:
         raise NotImplementedError
+    
+    async def search_without_cache(self, query: str, max_num_result: int) -> SearchResponse:
+        response = await self.search(query, max_num_result)
+        return response
 
     async def search_in_cache(self, query: str, max_num_result: int) -> SearchResponse:
         # Check the short-term cache
@@ -36,6 +41,9 @@ class SearchProvider(ABC):
         async def fetch_details_for_result(result: SearchResult):
             try:
                 start_time = time.time()
+                # Add small delay to prevent overwhelming resources
+                await asyncio.sleep(0.1) 
+
                 # find the result in the cache
                 cached_details = await long_term_cache_client.get(result.url)
                 if cached_details:
@@ -43,7 +51,7 @@ class SearchProvider(ABC):
                 else:
                     # Fetch the URL in an executor
                     html = await asyncio.get_event_loop().run_in_executor(
-                        None, lambda: fetch_url(result.url)
+                        None, lambda: fetch_url(result.url, config=tralifatura_config)
                     )
                     # Extract details in an executor
                     details = await asyncio.get_event_loop().run_in_executor(
@@ -54,6 +62,9 @@ class SearchProvider(ABC):
                 # log the time taken to fetch the details
                 logger.info(f"Fetched details for {result.url} in {time.time() - start_time:.2f} seconds")
                 start_time = time.time()
+
+                # Add small delay before LLM call
+                await asyncio.sleep(0.1)
 
                 # Generate a concise answer
                 result.answer = await llm_client.summarize_page(query, result)
@@ -66,4 +77,7 @@ class SearchProvider(ABC):
                 print(f"Error fetching details for {result.url}: {e}")
 
         await asyncio.gather(*[fetch_details_for_result(result) for result in results_without_details])
+
+        logger.info("Stuck here??")
+
         return results_without_details

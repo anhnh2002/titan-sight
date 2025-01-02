@@ -1,8 +1,13 @@
 import os
 from dotenv import load_dotenv
+from copy import deepcopy
+from trafilatura.settings import DEFAULT_CONFIG
 
 load_dotenv()
 
+# Trafilatura config
+tralifatura_config = deepcopy(DEFAULT_CONFIG)
+tralifatura_config['DEFAULT']['DOWNLOAD_TIMEOUT'] = '2'
 
 # Redis
 REDIS_URL=os.getenv("REDIS_URL")
@@ -31,9 +36,6 @@ LLM_BASE_MODEL_NAME=os.getenv("LLM_BASE_MODEL_NAME")
 HF_TOKEN=os.getenv("HF_TOKEN")
 MAX_PAGE_DETAILS_LENGTH = int(os.getenv("MAX_PAGE_DETAILS_LENGTH", 2048))
 MAX_ANSWER_TOKEN_PER_PAGE = int(os.getenv("MAX_ANSWER_TOKEN_PER_PAGE", 512))
-
-# Search Provider
-SEARCH_PROVIDER=os.getenv("SEARCH_PROVIDER")
 
 # Searxng
 SEARXNG_BASE_URL=os.getenv("SEARXNG_BASE_URL")

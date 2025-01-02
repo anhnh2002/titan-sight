@@ -1,9 +1,9 @@
 version: '3.3'
 
 services:
-  apis:
-    image: search-engine-apis:0.1.0
-    container_name: search-engine-apis
+  titan-sight:
+    image: titan-sight:0.1.0
+    container_name: titan-sight-apis
     build:
       context: .
       dockerfile: Dockerfile
@@ -20,9 +20,7 @@ services:
 
   searxng:
     image: searxng/searxng:2024.12.22-26097f444
-    container_name: search-engine-searxng
-    ports:
-      - "${SEARXNG_PORT}:8080"
+    container_name: titan-sight-searxng
     volumes:
       - ./searxng:/etc/searxng:rw
     networks:
@@ -30,18 +28,27 @@ services:
 
   redis:
     image: redis/redis-stack-server:7.2.0-v13
-    container_name: search-engine-redis
-    ports:
-      - "${REDIS_PORT}:6379"
+    container_name: titan-sight-redis
     environment:
     - REDIS_ARGS=--save 60 1
     volumes: 
       - ${SOURCE_REDIS_VOLUME}:/data
     networks:
       - net
+  
+  mongodb:
+    image: mongo:7.0-rc
+    container_name: titan-sight-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    volumes:
+      - ${SOURCE_MONGO_VOLUME}:/data/db
+    networks:
+      - net
 
 networks:
   net:
     external: true
-    name: nginx_default
+    name: titan_sight_net
 
