@@ -39,7 +39,14 @@ def ping(req: Request):
 
 # Version 1
 @app.get("/v1/search", description=f"Available search providers: {list(PROVIDERS.keys())}")
-async def search_v1(query: str, provider: Literal["searxng", "google", "duckduckgo"] = "duckduckgo", max_num_result: int = 3, enable_cache: bool = True):
+async def search_v1(
+    query: str,
+    provider: Literal["searxng", "google", "duckduckgo"] = "duckduckgo",
+    max_num_result: int = 3,
+    enable_cache: bool = True,
+    newest_first: bool = False,
+    sumup_page_timeout: int = 15,
+):
     
     start_time = time.time()
 
@@ -48,9 +55,9 @@ async def search_v1(query: str, provider: Literal["searxng", "google", "duckduck
 
     # Search
     if enable_cache:
-        result = await search_provider.search_in_cache(query, max_num_result)
+        result = await search_provider.search_in_cache(query, max_num_result, newest_first=newest_first, sumup_page_timeout=sumup_page_timeout)
     else:
-        result = await search_provider.search(query, max_num_result)
+        result = await search_provider.search(query, max_num_result, newest_first=newest_first, sumup_page_timeout=sumup_page_timeout)
 
     logger.info(f"Search for '{query}' returned {len(result.results)} results in {time.time() - start_time:.2f} seconds")
     

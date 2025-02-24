@@ -1,3 +1,6 @@
 *.env
 __pycache__/
 *.ipynb
+.hf_cache/
+mongo-data/
+redis-data/

@@ -55,6 +55,7 @@ class LLMClient:
 
         title = search_result.title
         url = search_result.url
+        summary = search_result.content
         details = search_result.details
 
         # truncate MAX_PAGE_DETAILS_LENGTH tokens from the details
@@ -78,6 +79,7 @@ class LLMClient:
         prompt = CONCISE_ANSWER_PROMPT.format(
             title=title,
             url=url,
+            summary=summary,
             details=details,
             query=query,
         )
