@@ -1,9 +1,9 @@
 {
     "generation_info": {
-        "timestamp": "2025-10-19T10:50:13.291466",
+        "timestamp": "2025-10-19T20:52:03.213610",
         "main_model": "kimi-k2-instruct",
         "generator_version": "1.0.0",
-        "repo_path": "/Users/anhnh/Documents/vscode/titan-sight",
+        "repo_path": "/Users/anhnh/Documents/code/titan-sight",
         "commit_id": null
     },
     "statistics": {
@@ -15,8 +15,9 @@
         "overview.md",
         "module_tree.json",
         "first_module_tree.json",
-        "data-models.md",
+        "schemas.md",
         "search-providers.md",
-        "client-services.md"
+        "ai-services.md",
+        "cache-management.md"
     ]
 }

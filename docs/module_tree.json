@@ -2,25 +2,23 @@
     "search-providers": {
         "components": [
             "src.search.providers.base.SearchProvider",
-            "src.search.providers.google.GoogleSearchProvider",
             "src.search.providers.duckduckgo.DuckDuckGoSearchProvider",
-            "src.search.providers.searxng.SearxngSearchProvider"
+            "src.search.providers.searxng.SearxngSearchProvider",
+            "src.search.providers.google.GoogleSearchProvider"
         ],
         "children": {}
     },
-    "client-services": {
+    "cache-management": {
         "components": [
-            "src.clients.llm_clients.LLMClient",
+            "src.clients.cache_clients.LongTermCacheClient",
+            "src.clients.cache_clients.ShortTermCacheClient"
+        ],
+        "children": {}
+    },
+    "ai-services": {
+        "components": [
             "src.clients.embedding_clients.EmbeddingClient",
-            "src.clients.cache_clients.ShortTermCacheClient",
-            "src.clients.cache_clients.LongTermCacheClient"
-        ],
-        "children": {}
-    },
-    "data-models": {
-        "components": [
-            "src.schemas.SearchResponse",
-            "src.schemas.SearchResult"
+            "src.clients.llm_clients.LLMClient"
         ],
         "children": {}
     }

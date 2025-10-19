@@ -2,40 +2,42 @@
 
 ## Overview
 
-Titan-Sight is a comprehensive search aggregation and intelligent content processing module that provides unified access to multiple search providers while enhancing search results with AI-powered content analysis and caching capabilities. The module serves as the primary search infrastructure for the Titan ecosystem, offering intelligent search result processing, content summarization, and multi-tier caching for optimal performance.
+Titan-Sight is a sophisticated search aggregation and intelligence module that provides unified access to multiple search providers while implementing intelligent caching mechanisms and AI-powered content summarization. The module is designed to deliver comprehensive search results with detailed page content and concise AI-generated answers.
+
+## Purpose
+
+The primary purpose of Titan-Sight is to:
+- Aggregate search results from multiple providers (Google, DuckDuckGo, SearXNG)
+- Implement intelligent caching strategies for performance optimization
+- Extract and summarize detailed page content using AI
+- Provide vector similarity search for query matching
+- Generate concise answers from page content using LLM models
 
 ## Architecture
 
 ```mermaid
 graph TB
     subgraph "Titan-Sight Module"
-        subgraph "Search Providers"
-            SP[SearchProvider Base Class]
+        subgraph "Search Layer"
+            SP[SearchProvider Base]
             GSP[GoogleSearchProvider]
             DSP[DuckDuckGoSearchProvider]
             SSP[SearxngSearchProvider]
         end
         
-        subgraph "Client Layer"
-            LC[LLMClient]
+        subgraph "Cache Layer"
+            STCC[ShortTermCacheClient]
+            LTCC[LongTermCacheClient]
+        end
+        
+        subgraph "AI Services"
             EC[EmbeddingClient]
-            STC[ShortTermCacheClient]
-            LTC[LongTermCacheClient]
+            LC[LLMClient]
         end
         
         subgraph "Data Models"
-            SR[SearchResponse]
-            SRes[SearchResult]
-        end
-        
-        subgraph "External Services"
-            Google[Google Custom Search API]
-            DDG[DuckDuckGo Search]
-            Searx[Searxng Instance]
-            LLM[LLM Service]
-            Embedding[Embedding Service]
-            Redis[Redis Cache]
-            Mongo[MongoDB]
+            SR[SearchResult]
+            SResp[SearchResponse]
         end
     end
     
@@ -43,82 +45,74 @@ graph TB
     SP --> DSP
     SP --> SSP
     
-    GSP --> Google
-    DSP --> DDG
-    SSP --> Searx
+    GSP --> STCC
+    DSP --> STCC
+    SSP --> STCC
     
-    LC --> LLM
-    EC --> Embedding
-    STC --> Redis
-    LTC --> Mongo
+    GSP --> LTCC
+    DSP --> LTCC
+    SSP --> LTCC
     
-    SP -.-> LC
-    SP -.-> STC
-    SP -.-> LTC
+    STCC --> EC
     
-    SR --> SRes
-    STC -.-> EC
+    GSP --> LC
+    DSP --> LC
+    SSP --> LC
+    
+    SR --> SResp
+    
+    STCC -.-> |Vector Search| EC
+    LC -.-> |Summarization| SR
 ```
 
-## Core Functionality
+## Core Components
 
-### 1. Multi-Provider Search Aggregation
-The module implements a provider pattern that allows seamless integration with multiple search engines:
-- **Google Custom Search API** - Provides access to Google's search infrastructure
-- **DuckDuckGo Search** - Privacy-focused search integration
-- **Searxng** - Self-hosted metasearch engine support
+### 1. Search Providers (`src.search.providers`)
+The search layer implements a provider pattern with pluggable search engines:
 
-### 2. Intelligent Content Processing
-Each search result undergoes intelligent processing:
-- **Content Fetching** - Retrieves full page content using trafilatura
-- **AI-Powered Summarization** - Generates concise answers using LLM
-- **Content Caching** - Multi-tier caching system for performance optimization
+- **Base Provider**: Abstract `SearchProvider` class defining the contract for all search implementations
+- **Google Search Provider**: Integration with Google Custom Search API
+- **DuckDuckGo Provider**: Integration with DuckDuckGo search
+- **SearXNG Provider**: Integration with self-hosted SearXNG instances
 
-### 3. Advanced Caching System
-Implements a sophisticated two-tier caching mechanism:
-- **Short-term Cache** - Redis-based vector similarity search for query caching
-- **Long-term Cache** - MongoDB storage for detailed page content
+Each provider handles search queries, result formatting, and integrates with caching and AI services.
 
-## Sub-Modules
+### 2. Cache Layer (`src.clients.cache_clients`)
+Implements a two-tier caching strategy:
 
-### Search Providers
-The search provider subsystem implements a unified interface for multiple search engines. Each provider handles the specific API requirements and response formats of its respective search service.
+- **Short-Term Cache**: Redis-based vector similarity cache for query results
+- **Long-Term Cache**: MongoDB-based persistent storage for page details
 
-**Documentation**: [search-providers.md](search-providers.md)
+The caching system significantly improves performance by storing search results and extracted page content.
 
-### Client Services
-The client layer provides specialized services for AI processing and data storage:
-- **LLM Client** - Handles AI-powered content summarization
-- **Embedding Client** - Manages vector embeddings for similarity search
-- **Cache Clients** - Implement short-term and long-term caching strategies
+### 3. AI Services (`src.clients`)
+Provides AI-powered capabilities:
 
-**Documentation**: [client-services.md](client-services.md)
+- **Embedding Client**: Generates vector embeddings for semantic search
+- **LLM Client**: Summarizes page content and generates concise answers
 
-### Data Models
-Standardized data structures for search results and responses, ensuring consistent data flow across the module.
+### 4. Data Models (`src.schemas`)
+Defines the data structures:
 
-**Documentation**: [data-models.md](data-models.md)
+- **SearchResult**: Individual search result with title, URL, content, and optional details/answer
+- **SearchResponse**: Container for search query and results list
 
 ## Key Features
 
-### 1. Unified Search Interface
-All search providers implement the common `SearchProvider` base class, ensuring consistent behavior and easy extensibility for new search engines.
+### Intelligent Caching
+- **Vector Similarity Search**: Uses embeddings to find similar queries in cache
+- **Configurable Expiration**: Short-term cache with TTL, long-term persistent storage
+- **Dual Cache Strategy**: Combines fast vector search with durable document storage
 
-### 2. Intelligent Result Enhancement
-Search results are automatically enhanced with:
-- Full page content extraction
-- AI-generated concise summaries
-- Relevance scoring and filtering
+### AI-Powered Content Processing
+- **Page Content Extraction**: Uses trafilatura for reliable web content extraction
+- **Content Summarization**: LLM-powered generation of concise answers
+- **Token-Aware Processing**: Respects token limits for optimal LLM usage
 
-### 3. Performance Optimization
-- **Asynchronous Processing** - All operations are async for optimal performance
-- **Multi-tier Caching** - Reduces API calls and improves response times
-- **Timeout Management** - Configurable timeouts prevent hanging operations
-
-### 4. Scalability
-- **Provider Abstraction** - Easy to add new search providers
-- **Configurable Parameters** - Flexible timeout and result limits
-- **Vector-based Caching** - Efficient similarity search for query caching
+### Multi-Provider Search
+- **Unified Interface**: Consistent API across different search providers
+- **Provider-Specific Features**: Leverages unique capabilities of each provider
+- **Configurable Result Limits**: Flexible control over result quantity
 
 ## Data Flow
 
@@ -126,52 +120,73 @@ Search results are automatically enhanced with:
 sequenceDiagram
     participant User
     participant SearchProvider
-    participant Cache
-    participant SearchAPI
+    participant ShortTermCache
+    participant LongTermCache
+    participant SearchEngine
     participant LLM
     
-    User->>SearchProvider: search(query)
-    SearchProvider->>Cache: check cache
+    User->>SearchProvider: Search Query
+    SearchProvider->>ShortTermCache: Check Cache
     alt Cache Hit
-        Cache-->>SearchProvider: cached results
+        ShortTermCache-->>User: Return Cached Results
     else Cache Miss
-        SearchProvider->>SearchAPI: fetch results
-        SearchProvider->>SearchProvider: process results
-        loop For each result
-            SearchProvider->>Cache: fetch page details
-            SearchProvider->>LLM: generate summary
-            LLM-->>SearchProvider: concise answer
-        end
-        SearchProvider->>Cache: store results
+        SearchProvider->>SearchEngine: Execute Search
+        SearchEngine-->>SearchProvider: Raw Results
+        SearchProvider->>LongTermCache: Check Page Details
+        SearchProvider->>LLM: Generate Summaries
+        LLM-->>SearchProvider: Concise Answers
+        SearchProvider->>ShortTermCache: Store Results
+        SearchProvider-->>User: Return Results
     end
-    SearchProvider-->>User: enhanced results
 ```
+
+## Sub-Modules
+
+The Titan-Sight module is organized into several sub-modules, each with detailed documentation:
+
+### [Search Providers](search-providers.md)
+Detailed documentation for the search provider implementations, including configuration options and provider-specific features.
+
+### [Cache Management](cache-management.md)
+Comprehensive guide to the caching system, including Redis vector search implementation and MongoDB integration.
+
+### [AI Services](ai-services.md)
+Documentation for embedding generation and LLM integration, including model configuration and prompt engineering.
+
+## Data Models
+
+### [SearchResult and SearchResponse](schemas.md)
+Core data structures that define the search result format and response containers used throughout the module.
 
 ## Integration Points
 
-### External Dependencies
-- **Search APIs** - Google Custom Search, DuckDuckGo, Searxng
-- **AI Services** - OpenAI-compatible LLM and embedding services
-- **Storage Systems** - Redis for caching, MongoDB for long-term storage
+Titan-Sight integrates with external services:
 
-### Internal Dependencies
-- **Trafilatura** - Content extraction from web pages
-- **Pydantic** - Data validation and serialization
-- **AsyncIO** - Asynchronous processing framework
+- **Redis**: For short-term vector similarity caching
+- **MongoDB**: For long-term persistent storage
+- **OpenAI API**: For embeddings and LLM completions
+- **Search APIs**: Google Custom Search, DuckDuckGo, SearXNG
 
 ## Configuration
 
-The module supports extensive configuration for:
-- Search provider credentials and endpoints
-- LLM service parameters and models
+The module requires configuration for:
+- Redis connection settings
+- MongoDB connection parameters
+- API keys for search providers and AI services
 - Cache expiration times and similarity thresholds
-- Timeout values for various operations
-- Result limits and processing parameters
+- LLM model selection and parameters
+
+## Performance Considerations
+
+- **Async Operations**: All I/O operations are asynchronous for optimal performance
+- **Timeout Management**: Configurable timeouts for web fetching and AI processing
+- **Concurrent Processing**: Parallel processing of multiple search results
+- **Vector Search**: Efficient similarity matching using Redis vector fields
 
 ## Error Handling
 
-Comprehensive error handling ensures system stability:
-- **Timeout Management** - Prevents operations from hanging
-- **Graceful Degradation** - Continues operation even if some providers fail
-- **Logging** - Detailed logging for debugging and monitoring
-- **Fallback Mechanisms** - Alternative approaches when primary methods fail
+The module implements comprehensive error handling:
+- Graceful degradation when providers are unavailable
+- Timeout protection for external service calls
+- Fallback mechanisms for cache failures
+- Detailed logging for debugging and monitoring
